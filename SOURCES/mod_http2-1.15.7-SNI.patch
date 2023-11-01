@@ -1,0 +1,25 @@
+commit 0686f5d00a4b5a54238a1979f8e61d179adf2ea9
+Author: Tomas Korbar <tkorbar@redhat.com>
+Date:   Thu Sep 22 14:56:24 2022 +0200
+
+    Backport refactor of SNI feature
+
+diff --git a/mod_http2/mod_proxy_http2.c b/mod_http2/mod_proxy_http2.c
+index 83ae431..2208707 100644
+--- a/mod_http2/mod_proxy_http2.c
++++ b/mod_http2/mod_proxy_http2.c
+@@ -403,14 +403,6 @@ run_connect:
+          */
+         apr_table_setn(ctx->p_conn->connection->notes,
+                        "proxy-request-alpn-protos", "h2");
+-        if (ctx->p_conn->ssl_hostname) {
+-            ap_log_cerror(APLOG_MARK, APLOG_TRACE1, 0, ctx->owner,
+-                          "set SNI to %s for (%s)",
+-                          ctx->p_conn->ssl_hostname,
+-                          ctx->p_conn->hostname);
+-            apr_table_setn(ctx->p_conn->connection->notes,
+-                           "proxy-request-hostname", ctx->p_conn->ssl_hostname);
+-        }
+     }
+ 
+     if (ctx->master->aborted) goto cleanup;
