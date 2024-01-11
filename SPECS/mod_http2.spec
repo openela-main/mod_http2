@@ -3,7 +3,7 @@
 
 Name:		mod_http2
 Version:	1.15.19
-Release:	4%{?dist}.4
+Release:	5%{?dist}
 Summary:	module implementing HTTP/2 for Apache 2
 License:	ASL 2.0
 URL:		https://icing.github.io/mod_h2/
@@ -22,7 +22,8 @@ BuildRequires:  gcc
 BuildRequires:	pkgconfig, httpd-devel >= 2.4.20, libnghttp2-devel >= 1.7.0, openssl-devel >= 1.0.2
 BuildRequires:  autoconf, libtool, /usr/bin/hostname
 Requires:	httpd-mmn = %{_httpd_mmn}
-Conflicts:      httpd < 2.4.53-11%{?dist}.3
+Requires:	httpd >= 2.4.51-7
+Conflicts:      httpd < 2.4.57
 
 %description
 The mod_h2 Apache httpd module implements the HTTP2 protocol (h2+h2c) on
@@ -59,8 +60,8 @@ echo "LoadModule proxy_http2_module modules/mod_proxy_http2.so" > %{buildroot}%{
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
-* Thu Mar 16 2023 Luboš Uhliarik <luhliari@redhat.com> - 1.15.19-4.4
-- Resolves: #2177752 - CVE-2023-25690 httpd: HTTP request splitting with
+* Wed Aug 16 2023 Luboš Uhliarik <luhliari@redhat.com> - 1.15.19-5
+- Resolves: #2177753 - CVE-2023-25690 httpd: HTTP request splitting with
   mod_rewrite and mod_proxy
 
 * Mon Dec 05 2022 Luboš Uhliarik <luhliari@redhat.com> - 1.15.19-4
