@@ -3,7 +3,7 @@
 
 Name:		mod_http2
 Version:	1.15.19
-Release:	5%{?dist}
+Release:	5%{?dist}.1
 Summary:	module implementing HTTP/2 for Apache 2
 License:	ASL 2.0
 URL:		https://icing.github.io/mod_h2/
@@ -16,6 +16,8 @@ Patch2:         mod_http2-1.15.14-openssl30.patch
 Patch100:       mod_http2-1.15.19-CVE-2021-44224.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=2176209
 Patch101:       mod_http2-1.15.19-CVE-2023-25690.patch
+# https://bugzilla.redhat.com/show_bug.cgi?id=2268277
+Patch102:       mod_http2-1.15.19-CVE-2024-27316.patch
 
 BuildRequires: make
 BuildRequires:  gcc
@@ -36,6 +38,7 @@ top of libnghttp2 for httpd 2.4 servers.
 
 %patch100 -p1 -b .CVE-2021-44224
 %patch101 -p1 -b .CVE-2023-25690
+%patch102 -p1 -b .CVE-2024-27316
 
 %build
 autoreconf -i
@@ -60,6 +63,10 @@ echo "LoadModule proxy_http2_module modules/mod_proxy_http2.so" > %{buildroot}%{
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
+* Fri Apr 05 2024 Luboš Uhliarik <luhliari@redhat.com> - 1.15.19-5.1
+- Resolves: RHEL-29826 - mod_http2: httpd: CONTINUATION frames
+  DoS (CVE-2024-27316)
+
 * Wed Aug 16 2023 Luboš Uhliarik <luhliari@redhat.com> - 1.15.19-5
 - Resolves: #2177753 - CVE-2023-25690 httpd: HTTP request splitting with
   mod_rewrite and mod_proxy
