@@ -2,22 +2,17 @@
 %{!?_httpd_mmn: %global _httpd_mmn %(cat %{_includedir}/httpd/.mmn 2>/dev/null || echo 0-0)}
 
 Name:		mod_http2
-Version:	1.15.19
-Release:	5%{?dist}.1
+Version:	2.0.26
+Release:	1%{?dist}
 Summary:	module implementing HTTP/2 for Apache 2
 License:	ASL 2.0
 URL:		https://icing.github.io/mod_h2/
 Source0:	https://github.com/icing/mod_h2/releases/download/v%{version}/mod_http2-%{version}.tar.gz
-Patch1:         mod_http2-1.14.1-buildfix.patch
-Patch2:         mod_http2-1.15.14-openssl30.patch
+# Patch1:       ...
 
 # Security patches:
-# https://bugzilla.redhat.com/show_bug.cgi?id=2034672
-Patch100:       mod_http2-1.15.19-CVE-2021-44224.patch
-# https://bugzilla.redhat.com/show_bug.cgi?id=2176209
-Patch101:       mod_http2-1.15.19-CVE-2023-25690.patch
-# https://bugzilla.redhat.com/show_bug.cgi?id=2268277
-Patch102:       mod_http2-1.15.19-CVE-2024-27316.patch
+# 
+# Patch100:      ...
 
 BuildRequires: make
 BuildRequires:  gcc
@@ -33,12 +28,6 @@ top of libnghttp2 for httpd 2.4 servers.
 
 %prep
 %setup -q
-%patch1 -p1 -b .buildfix
-%patch2 -p1 -b .openssl30
-
-%patch100 -p1 -b .CVE-2021-44224
-%patch101 -p1 -b .CVE-2023-25690
-%patch102 -p1 -b .CVE-2024-27316
 
 %build
 autoreconf -i
@@ -63,9 +52,8 @@ echo "LoadModule proxy_http2_module modules/mod_proxy_http2.so" > %{buildroot}%{
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
-* Fri Apr 05 2024 Luboš Uhliarik <luhliari@redhat.com> - 1.15.19-5.1
-- Resolves: RHEL-29826 - mod_http2: httpd: CONTINUATION frames
-  DoS (CVE-2024-27316)
+* Thu Jan 18 2024 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-1
+- Resolves: RHEL-14691 - mod_http2 rebase to 2.0.26
 
 * Wed Aug 16 2023 Luboš Uhliarik <luhliari@redhat.com> - 1.15.19-5
 - Resolves: #2177753 - CVE-2023-25690 httpd: HTTP request splitting with
