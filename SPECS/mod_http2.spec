@@ -3,7 +3,7 @@
 
 Name:		mod_http2
 Version:	2.0.26
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	module implementing HTTP/2 for Apache 2
 License:	ASL 2.0
 URL:		https://icing.github.io/mod_h2/
@@ -11,8 +11,9 @@ Source0:	https://github.com/icing/mod_h2/releases/download/v%{version}/mod_http2
 # Patch1:       ...
 
 # Security patches:
-# 
-# Patch100:      ...
+#
+# https://bugzilla.redhat.com/show_bug.cgi?id=2268277
+Patch100:      mod_http2-2.0.26-CVE-2024-27316.patch
 
 BuildRequires: make
 BuildRequires:  gcc
@@ -27,7 +28,7 @@ The mod_h2 Apache httpd module implements the HTTP2 protocol (h2+h2c) on
 top of libnghttp2 for httpd 2.4 servers.
 
 %prep
-%setup -q
+%autosetup -p1
 
 %build
 autoreconf -i
@@ -52,6 +53,10 @@ echo "LoadModule proxy_http2_module modules/mod_proxy_http2.so" > %{buildroot}%{
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
+* Fri Apr 05 2024 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-2
+- Resolves: RHEL-31855 - mod_http2: httpd: CONTINUATION frames
+  DoS (CVE-2024-27316)
+
 * Thu Jan 18 2024 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-1
 - Resolves: RHEL-14691 - mod_http2 rebase to 2.0.26
 
