@@ -3,7 +3,7 @@
 
 Name:		mod_http2
 Version:	1.15.7
-Release:	8%{?dist}.5
+Release:	10%{?dist}
 Summary:	module implementing HTTP/2 for Apache 2
 Group:		System Environment/Daemons
 License:	ASL 2.0
@@ -16,8 +16,10 @@ Patch4:		mod_http2-1.15.7-CVE-2021-44224.patch
 Patch5:		mod_http2-1.15.7-SNI.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=2176209
 Patch6:		mod_http2-1.15.7-CVE-2023-25690.patch
+# https://bugzilla.redhat.com/show_bug.cgi?id=2243877
+Patch7:		mod_http2-1.15.7-CVE-2023-45802.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=2268277
-Patch7:		mod_http2-1.15.7-CVE-2024-27316.patch
+Patch8:		mod_http2-1.15.7-CVE-2024-27316.patch
 
 BuildRequires:	pkgconfig, httpd-devel >= 2.4.20, libnghttp2-devel >= 1.7.0, openssl-devel >= 1.0.2
 Requires:	httpd-mmn = %{_httpd_mmn}
@@ -35,7 +37,8 @@ top of libnghttp2 for httpd 2.4 servers.
 %patch4 -p1 -b .CVE-2021-44224
 %patch5 -p1 -b .SNI
 %patch6 -p1 -b .CVE-2023-25690
-%patch7 -p1 -b .CVE-2024-27316
+%patch7 -p1 -b .CVE-2023-45802
+%patch8 -p1 -b .CVE-2024-27316
 
 %build
 %configure
@@ -62,9 +65,13 @@ make check
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
-* Thu Apr 04 2024 Luboš Uhliarik <luhliari@redhat.com> - 1.15.7-8.5
-- Resolves: RHEL-29816 - httpd:2.4/mod_http2: httpd: CONTINUATION frames
+* Fri Apr 05 2024 Luboš Uhliarik <luhliari@redhat.com> - 1.15.7-10
+- Resolves: RHEL-29817 - httpd:2.4/mod_http2: httpd: CONTINUATION frames
   DoS (CVE-2024-27316)
+
+* Fri Feb 02 2024 Luboš Uhliarik <luhliari@redhat.com> - 1.15.7-9.3
+- Resolves: RHEL-13367 - httpd:2.4/mod_http2: reset requests exhaust memory
+  (incomplete fix of CVE-2023-44487)(CVE-2023-45802)
 
 * Sat Mar 18 2023 Luboš Uhliarik <luhliari@redhat.com> - 1.15.7-8.3
 - Resolves: #2177748 - CVE-2023-25690 httpd:2.4/httpd: HTTP request splitting
