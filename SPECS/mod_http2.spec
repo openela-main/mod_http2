@@ -3,7 +3,7 @@
 
 Name:		mod_http2
 Version:	1.15.7
-Release:	10%{?dist}
+Release:	10%{?dist}.1
 Summary:	module implementing HTTP/2 for Apache 2
 Group:		System Environment/Daemons
 License:	ASL 2.0
@@ -20,6 +20,8 @@ Patch6:		mod_http2-1.15.7-CVE-2023-25690.patch
 Patch7:		mod_http2-1.15.7-CVE-2023-45802.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=2268277
 Patch8:		mod_http2-1.15.7-CVE-2024-27316.patch
+# https://issues.redhat.com/browse/RHEL-46214
+Patch9:		mod_http2-1.15.7-log-error-resp.patch
 
 BuildRequires:	pkgconfig, httpd-devel >= 2.4.20, libnghttp2-devel >= 1.7.0, openssl-devel >= 1.0.2
 Requires:	httpd-mmn = %{_httpd_mmn}
@@ -39,6 +41,7 @@ top of libnghttp2 for httpd 2.4 servers.
 %patch6 -p1 -b .CVE-2023-25690
 %patch7 -p1 -b .CVE-2023-45802
 %patch8 -p1 -b .CVE-2024-27316
+%patch9 -p1 -b .log-error-resp
 
 %build
 %configure
@@ -65,6 +68,10 @@ make check
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
+* Tue Aug 27 2024 Luboš Uhliarik <luhliari@redhat.com> - 1.15.7-10.1
+- Resolves: RHEL-46214 - Access logs and ErrorDocument don't work when HTTP431
+  occurs using http/2 on RHEL8
+
 * Fri Apr 05 2024 Luboš Uhliarik <luhliari@redhat.com> - 1.15.7-10
 - Resolves: RHEL-29817 - httpd:2.4/mod_http2: httpd: CONTINUATION frames
   DoS (CVE-2024-27316)

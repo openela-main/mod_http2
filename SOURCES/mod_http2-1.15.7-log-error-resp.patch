@@ -1,0 +1,271 @@
+diff --git a/mod_http2/h2.h b/mod_http2/h2.h
+index e057d66..33a225d 100644
+--- a/mod_http2/h2.h
++++ b/mod_http2/h2.h
+@@ -141,8 +141,19 @@ struct h2_request {
+     unsigned int chunked : 1;   /* iff requst body needs to be forwarded as chunked */
+     unsigned int serialize : 1; /* iff this request is written in HTTP/1.1 serialization */
+     apr_off_t raw_bytes;        /* RAW network bytes that generated this request - if known. */
++    int http_status;            /* Store a possible HTTP status code that gets
++                                 * defined before creating the dummy HTTP/1.1
++                                 * request e.g. due to an error already
++                                 * detected.
++                                 */
+ };
+ 
++/*
++ * A possible HTTP status code is not defined yet. See the http_status field
++ * in struct h2_request above for further explanation.
++ */
++#define H2_HTTP_STATUS_UNSET (0)
++
+ typedef struct h2_headers h2_headers;
+ 
+ struct h2_headers {
+diff --git a/mod_http2/h2_request.c b/mod_http2/h2_request.c
+index 89a0b47..1892967 100644
+--- a/mod_http2/h2_request.c
++++ b/mod_http2/h2_request.c
+@@ -79,11 +79,12 @@ apr_status_t h2_request_rcreate(h2_request **preq, apr_pool_t *pool,
+     }
+     
+     req = apr_pcalloc(pool, sizeof(*req));
+-    req->method    = apr_pstrdup(pool, r->method);
+-    req->scheme    = scheme;
+-    req->authority = authority;
+-    req->path      = path;
+-    req->headers   = apr_table_make(pool, 10);
++    req->method      = apr_pstrdup(pool, r->method);
++    req->scheme      = scheme;
++    req->authority   = authority;
++    req->path        = path;
++    req->headers     = apr_table_make(pool, 10);
++    req->http_status = H2_HTTP_STATUS_UNSET;
+     if (r->server) {
+         req->serialize = h2_config_rgeti(r, H2_CONF_SER_HEADERS);
+     }
+@@ -208,53 +209,92 @@ h2_request *h2_request_clone(apr_pool_t *p, const h2_request *src)
+ 
+ request_rec *h2_request_create_rec(const h2_request *req, conn_rec *c)
+ {
+-    int access_status = HTTP_OK;
+-    const char *rpath;
+-    const char *s;
++    int access_status;
+ 
+     request_rec *r = ap_create_request(c);
+ 
+-    r->headers_in = apr_table_clone(r->pool, req->headers);
+-
++#if AP_MODULE_MAGIC_AT_LEAST(20200331, 3)
+     ap_run_pre_read_request(r, c);
+     
+     /* Time to populate r with the data we have. */
+     r->request_time = req->request_time;
+-    r->method = apr_pstrdup(r->pool, req->method);
+-    /* Provide quick information about the request method as soon as known */
+-    r->method_number = ap_method_number_of(r->method);
+-    if (r->method_number == M_GET && r->method[0] == 'H') {
+-        r->header_only = 1;
+-    }
+-
+-    rpath = (req->path ? req->path : "");
+-    ap_parse_uri(r, rpath);
+-    r->protocol = (char*)"HTTP/2.0";
+-    r->proto_num = HTTP_VERSION(2, 0);
++    r->the_request = apr_psprintf(r->pool, "%s %s HTTP/2.0", 
++                                  req->method, req->path ? req->path : "");
++    r->headers_in = apr_table_clone(r->pool, req->headers);
+ 
+-    r->the_request = apr_psprintf(r->pool, "%s %s %s", 
+-                                  r->method, rpath, r->protocol);
+-    
+-    /* update what we think the virtual host is based on the headers we've
+-     * now read. may update status.
+-     * Leave r->hostname empty, vhost will parse if form our Host: header,
+-     * otherwise we get complains about port numbers.
++    /* Start with r->hostname = NULL, ap_check_request_header() will get it
++     * form Host: header, otherwise we get complains about port numbers.
+      */
+     r->hostname = NULL;
+-    ap_update_vhost_from_headers(r);
+-    
+-    /* we may have switched to another server */
+-    r->per_dir_config = r->server->lookup_defaults;
+-    
+-    s = apr_table_get(r->headers_in, "Expect");
+-    if (s && s[0]) {
+-        if (ap_cstr_casecmp(s, "100-continue") == 0) {
+-            r->expecting_100 = 1;
++
++    /* Validate HTTP/1 request and select vhost. */
++    if (!ap_parse_request_line(r) || !ap_check_request_header(r)) {
++        /* we may have switched to another server still */
++        r->per_dir_config = r->server->lookup_defaults;
++        if (req->http_status != H2_HTTP_STATUS_UNSET) {
++            access_status = req->http_status;
++            /* Be safe and close the connection */
++            c->keepalive = AP_CONN_CLOSE;
+         }
+         else {
+-            r->status = HTTP_EXPECTATION_FAILED;
+-            ap_send_error_response(r, 0);
++            access_status = r->status;
+         }
++        r->status = HTTP_OK;
++        goto die;
++    }
++#else
++    {
++        const char *s;
++
++        r->headers_in = apr_table_clone(r->pool, req->headers);
++        ap_run_pre_read_request(r, c);
++
++        /* Time to populate r with the data we have. */
++        r->request_time = req->request_time;
++        r->method = apr_pstrdup(r->pool, req->method);
++        /* Provide quick information about the request method as soon as known */
++        r->method_number = ap_method_number_of(r->method);
++        if (r->method_number == M_GET && r->method[0] == 'H') {
++            r->header_only = 1;
++        }
++        ap_parse_uri(r, req->path ? req->path : "");
++        r->protocol = (char*)"HTTP/2.0";
++        r->proto_num = HTTP_VERSION(2, 0);
++        r->the_request = apr_psprintf(r->pool, "%s %s HTTP/2.0",
++                                      r->method, req->path ? req->path : "");
++
++        /* Start with r->hostname = NULL, ap_check_request_header() will get it
++         * form Host: header, otherwise we get complains about port numbers.
++         */
++        r->hostname = NULL;
++        ap_update_vhost_from_headers(r);
++
++         /* we may have switched to another server */
++         r->per_dir_config = r->server->lookup_defaults;
++
++         s = apr_table_get(r->headers_in, "Expect");
++         if (s && s[0]) {
++            if (ap_cstr_casecmp(s, "100-continue") == 0) {
++                r->expecting_100 = 1;
++            }
++            else {
++                r->status = HTTP_EXPECTATION_FAILED;
++                access_status = r->status;
++                goto die;
++            }
++         }
++    }
++#endif
++
++    /* we may have switched to another server */
++    r->per_dir_config = r->server->lookup_defaults;
++
++    if (req->http_status != H2_HTTP_STATUS_UNSET) {
++        access_status = req->http_status;
++        r->status = HTTP_OK;
++        /* Be safe and close the connection */
++        c->keepalive = AP_CONN_CLOSE;
++        goto die;
+     }
+ 
+     /*
+@@ -266,28 +306,47 @@ request_rec *h2_request_create_rec(const h2_request *req, conn_rec *c)
+     ap_add_input_filter_handle(ap_http_input_filter_handle,
+                                NULL, r, r->connection);
+     
+-    if (access_status != HTTP_OK
+-        || (access_status = ap_post_read_request(r))) {
++    if ((access_status = ap_run_post_read_request(r))) {
+         /* Request check post hooks failed. An example of this would be a
+          * request for a vhost where h2 is disabled --> 421.
+          */
+         ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c, APLOGNO(03367)
+                       "h2_request: access_status=%d, request_create failed",
+                       access_status);
+-        ap_die(access_status, r);
+-        ap_update_child_status(c->sbh, SERVER_BUSY_LOG, r);
+-        ap_run_log_transaction(r);
+-        r = NULL;
+-        goto traceout;
++        goto die;
+     }
+ 
+     AP_READ_REQUEST_SUCCESS((uintptr_t)r, (char *)r->method, 
+                             (char *)r->uri, (char *)r->server->defn_name, 
+                             r->status);
+     return r;
+-traceout:
++die:
++    ap_die(access_status, r);
++
++    /* ap_die() sent the response through the output filters, we must now
++     * end the request with an EOR bucket for stream/pipeline accounting.
++     */
++    {
++        apr_bucket_brigade *eor_bb;
++#if AP_MODULE_MAGIC_AT_LEAST(20180905, 1)
++        eor_bb = ap_acquire_brigade(c);
++        APR_BRIGADE_INSERT_TAIL(eor_bb,
++                                ap_bucket_eor_create(c->bucket_alloc, r));
++        ap_pass_brigade(c->output_filters, eor_bb);
++        ap_release_brigade(c, eor_bb);
++#else
++        eor_bb = apr_brigade_create(c->pool, c->bucket_alloc);
++        APR_BRIGADE_INSERT_TAIL(eor_bb,
++                                ap_bucket_eor_create(c->bucket_alloc, r));
++        ap_pass_brigade(c->output_filters, eor_bb);
++        apr_brigade_destroy(eor_bb);
++#endif
++    }
++
++    r = NULL;
++
+     AP_READ_REQUEST_FAILURE((uintptr_t)r);
+-    return r;
++    return NULL;
+ }
+ 
+ 
+diff --git a/mod_http2/h2_session.c b/mod_http2/h2_session.c
+index 07983a3..2a97ad9 100644
+--- a/mod_http2/h2_session.c
++++ b/mod_http2/h2_session.c
+@@ -311,9 +311,9 @@ static int on_header_cb(nghttp2_session *ngh2, const nghttp2_frame *frame,
+     
+     status = h2_stream_add_header(stream, (const char *)name, namelen,
+                                   (const char *)value, valuelen);
+-    if (status != APR_SUCCESS 
+-        && (!h2_stream_is_ready(stream) ||
+-            /* We accept a certain amount of failures in order to reply
++    if (status != APR_SUCCESS &&
++        (!stream->rtmp ||
++            stream->rtmp->http_status == H2_HTTP_STATUS_UNSET ||  /* We accept a certain amount of failures in order to reply
+              * with an informative HTTP error response like 413. But of the
+              * client is too wrong, we fail the request an RESET the stream */
+             stream->request_headers_failed > 100)) {
+diff --git a/mod_http2/h2_stream.c b/mod_http2/h2_stream.c
+index 62021b6..adbd5d2 100644
+--- a/mod_http2/h2_stream.c
++++ b/mod_http2/h2_stream.c
+@@ -638,17 +638,8 @@ void h2_stream_set_request(h2_stream *stream, const h2_request *r)
+ 
+ static void set_error_response(h2_stream *stream, int http_status)
+ {
+-    if (!h2_stream_is_ready(stream)) {
+-        conn_rec *c = stream->session->c;
+-        apr_bucket *b;
+-        h2_headers *response;
+-        
+-        response = h2_headers_die(http_status, stream->request, stream->pool);
+-        prep_output(stream);
+-        b = apr_bucket_eos_create(c->bucket_alloc);
+-        APR_BRIGADE_INSERT_HEAD(stream->out_buffer, b);
+-        b = h2_bucket_headers_create(c->bucket_alloc, response);
+-        APR_BRIGADE_INSERT_HEAD(stream->out_buffer, b);
++    if (!h2_stream_is_ready(stream) && stream->rtmp) {
++        stream->rtmp->http_status = http_status;
+     }
+ }
+ 
