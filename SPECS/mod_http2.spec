@@ -3,7 +3,7 @@
 
 Name:		mod_http2
 Version:	1.15.7
-Release:	10%{?dist}.1
+Release:	10%{?dist}.3
 Summary:	module implementing HTTP/2 for Apache 2
 Group:		System Environment/Daemons
 License:	ASL 2.0
@@ -22,6 +22,12 @@ Patch7:		mod_http2-1.15.7-CVE-2023-45802.patch
 Patch8:		mod_http2-1.15.7-CVE-2024-27316.patch
 # https://issues.redhat.com/browse/RHEL-46214
 Patch9:		mod_http2-1.15.7-log-error-resp.patch
+# https://issues.redhat.com/browse/RHEL-71575
+Patch10:	mod_http2-1.15.7-wrong-cl-proxy-resp-handling.patch
+# https://issues.redhat.com/browse/RHEL-58454
+Patch11:	mod_http2-1.15.7-r1918628.patch
+# https://issues.redhat.com/browse/RHEL-59017
+Patch12:	mod_http2-1.15.7-fix-mood-change.patch
 
 BuildRequires:	pkgconfig, httpd-devel >= 2.4.20, libnghttp2-devel >= 1.7.0, openssl-devel >= 1.0.2
 Requires:	httpd-mmn = %{_httpd_mmn}
@@ -42,6 +48,9 @@ top of libnghttp2 for httpd 2.4 servers.
 %patch7 -p1 -b .CVE-2023-45802
 %patch8 -p1 -b .CVE-2024-27316
 %patch9 -p1 -b .log-error-resp
+%patch10 -p1 -b .wrong-cl-proxy-resp-handling
+%patch11 -p1 -b .r1918628
+%patch12 -p1 -b .fix-mood-change
 
 %build
 %configure
@@ -68,6 +77,14 @@ make check
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
+* Tue Jan 28 2025 Luboš Uhliarik <luhliari@redhat.com> - 1.15.7-10.3
+- Resolves: RHEL-58454 - mod_proxy_http2 failures after CVE-2024-38477 fix
+- Resolves: RHEL-59017 - random failures in other requests on http/2 stream
+  when client resets one request
+
+* Tue Jan 07 2025 Luboš Uhliarik <luhliari@redhat.com> - 1.15.7-10.2
+- Resolves: RHEL-71575: Wrong Content-Type when proxying using H2 protocol
+
 * Tue Aug 27 2024 Luboš Uhliarik <luhliari@redhat.com> - 1.15.7-10.1
 - Resolves: RHEL-46214 - Access logs and ErrorDocument don't work when HTTP431
   occurs using http/2 on RHEL8

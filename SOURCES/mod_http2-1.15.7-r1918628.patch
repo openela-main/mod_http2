@@ -1,0 +1,21 @@
+diff --git a/mod_http2/mod_proxy_http2.c b/mod_http2/mod_proxy_http2.c
+index c3b2ad5..7443021 100644
+--- a/mod_http2/mod_proxy_http2.c
++++ b/mod_http2/mod_proxy_http2.c
+@@ -303,7 +303,7 @@ static int proxy_http2_handler(request_rec *r,
+                                apr_port_t proxyport)
+ {
+     const char *proxy_func, *task_id;
+-    char *locurl = url, *u;
++    char *locurl, *u;
+     apr_size_t slen;
+     int is_ssl = 0;
+     apr_status_t status;
+@@ -372,6 +372,7 @@ run_connect:
+         goto cleanup;
+     }
+ 
++    locurl = url;
+     ctx->p_conn->is_ssl = ctx->is_ssl;
+ 
+     /* Step One: Determine the URL to connect to (might be a proxy),
