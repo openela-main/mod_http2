@@ -3,12 +3,14 @@
 
 Name:		mod_http2
 Version:	2.0.26
-Release:	2%{?dist}.1
+Release:	4%{?dist}
 Summary:	module implementing HTTP/2 for Apache 2
 License:	ASL 2.0
 URL:		https://icing.github.io/mod_h2/
 Source0:	https://github.com/icing/mod_h2/releases/download/v%{version}/mod_http2-%{version}.tar.gz
-# Patch1:       ...
+
+# https://issues.redhat.com/browse/RHEL-76413
+Patch1:         mod_http2-2.0.26-r1918628.patch
 
 # Security patches:
 #
@@ -55,8 +57,11 @@ echo "LoadModule proxy_http2_module modules/mod_proxy_http2.so" > %{buildroot}%{
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
-* Tue Jul 09 2024 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-2.1
-- Resolves: RHEL-45803 - mod_http2: DoS by null pointer in websocket
+* Mon Jan 27 2025 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-4
+- Resolves: RHEL-76413 - mod_proxy_http2 failures after CVE-2024-38477 fix
+
+* Tue Jul 09 2024 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-3
+- Resolves: RHEL-45806 - mod_http2: DoS by null pointer in websocket
   over HTTP/2 (CVE-2024-36387)
 
 * Fri Apr 05 2024 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-2
