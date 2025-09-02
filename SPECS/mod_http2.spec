@@ -3,7 +3,7 @@
 
 Name:		mod_http2
 Version:	2.0.26
-Release:	4%{?dist}
+Release:	4%{?dist}.1
 Summary:	module implementing HTTP/2 for Apache 2
 License:	ASL 2.0
 URL:		https://icing.github.io/mod_h2/
@@ -18,6 +18,8 @@ Patch1:         mod_http2-2.0.26-r1918628.patch
 Patch100:      mod_http2-2.0.26-CVE-2024-27316.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=2295006
 Patch101:      mod_http2-2.0.26-CVE-2024-36387.patch
+# https://bugzilla.redhat.com/show_bug.cgi?id=2374578
+Patch102:      mod_http2-2.0.26-CVE-2025-49630.patch
 
 BuildRequires: make
 BuildRequires:  gcc
@@ -57,6 +59,10 @@ echo "LoadModule proxy_http2_module modules/mod_proxy_http2.so" > %{buildroot}%{
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
+* Mon Jul 28 2025 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-4.1
+- Resolves: RHEL-99956 - CVE-2025-49630 httpd: untrusted input from a client
+  causes an assertion to fail in the Apache mod_proxy_http2 module
+
 * Mon Jan 27 2025 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-4
 - Resolves: RHEL-76413 - mod_proxy_http2 failures after CVE-2024-38477 fix
 
