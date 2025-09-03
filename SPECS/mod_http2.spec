@@ -3,7 +3,7 @@
 
 Name:		mod_http2
 Version:	1.15.7
-Release:	10%{?dist}.3
+Release:	10%{?dist}.4
 Summary:	module implementing HTTP/2 for Apache 2
 Group:		System Environment/Daemons
 License:	ASL 2.0
@@ -28,6 +28,8 @@ Patch10:	mod_http2-1.15.7-wrong-cl-proxy-resp-handling.patch
 Patch11:	mod_http2-1.15.7-r1918628.patch
 # https://issues.redhat.com/browse/RHEL-59017
 Patch12:	mod_http2-1.15.7-fix-mood-change.patch
+# https://bugzilla.redhat.com/show_bug.cgi?id=2374578
+Patch13:	mod_http2-1.15.7-CVE-2025-49630.patch
 
 BuildRequires:	pkgconfig, httpd-devel >= 2.4.20, libnghttp2-devel >= 1.7.0, openssl-devel >= 1.0.2
 Requires:	httpd-mmn = %{_httpd_mmn}
@@ -51,6 +53,7 @@ top of libnghttp2 for httpd 2.4 servers.
 %patch10 -p1 -b .wrong-cl-proxy-resp-handling
 %patch11 -p1 -b .r1918628
 %patch12 -p1 -b .fix-mood-change
+%patch13 -p1 -b .CVE-2025-49630
 
 %build
 %configure
@@ -77,6 +80,10 @@ make check
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
+* Mon Jul 28 2025 Luboš Uhliarik <luhliari@redhat.com> - 1.15.7-10.4
+- Resolves: RHEL-105186 - httpd:2.4/httpd: untrusted input from a client causes
+  an assertion to fail in the Apache mod_proxy_http2 module (CVE-2025-49630)
+
 * Tue Jan 28 2025 Luboš Uhliarik <luhliari@redhat.com> - 1.15.7-10.3
 - Resolves: RHEL-58454 - mod_proxy_http2 failures after CVE-2024-38477 fix
 - Resolves: RHEL-59017 - random failures in other requests on http/2 stream
