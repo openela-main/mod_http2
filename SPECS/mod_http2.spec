@@ -3,7 +3,7 @@
 
 Name:		mod_http2
 Version:	2.0.29
-Release:	2%{?dist}.1
+Release:	3%{?dist}
 Summary:	module implementing HTTP/2 for Apache 2
 License:	Apache-2.0
 URL:		https://icing.github.io/mod_h2/
@@ -52,8 +52,8 @@ echo "LoadModule proxy_http2_module modules/mod_proxy_http2.so" > %{buildroot}%{
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
-* Mon Jul 28 2025 Luboš Uhliarik <luhliari@redhat.com> - 2.0.29-2.1
-- Resolves: RHEL-99954 - CVE-2025-49630 httpd: untrusted input from a client
+* Wed Aug 20 2025 Luboš Uhliarik <luhliari@redhat.com> - 2.0.29-3
+- Resolves: RHEL-106263 - CVE-2025-49630 httpd: untrusted input from a client
   causes an assertion to fail in the Apache mod_proxy_http2 module
 
 * Tue Oct 29 2024 Troy Dawson <tdawson@redhat.com> - 2.0.29-2
