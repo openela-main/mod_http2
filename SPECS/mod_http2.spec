@@ -3,7 +3,7 @@
 
 Name:		mod_http2
 Version:	1.15.7
-Release:	10%{?dist}.4
+Release:	10%{?dist}.5
 Summary:	module implementing HTTP/2 for Apache 2
 Group:		System Environment/Daemons
 License:	ASL 2.0
@@ -30,6 +30,8 @@ Patch11:	mod_http2-1.15.7-r1918628.patch
 Patch12:	mod_http2-1.15.7-fix-mood-change.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=2374578
 Patch13:	mod_http2-1.15.7-CVE-2025-49630.patch
+# https://bugzilla.redhat.com/show_bug.cgi?id=2379343
+Patch14:	mod_http2-1.15.7-CVE-2025-53020.patch
 
 BuildRequires:	pkgconfig, httpd-devel >= 2.4.20, libnghttp2-devel >= 1.7.0, openssl-devel >= 1.0.2
 Requires:	httpd-mmn = %{_httpd_mmn}
@@ -54,6 +56,7 @@ top of libnghttp2 for httpd 2.4 servers.
 %patch11 -p1 -b .r1918628
 %patch12 -p1 -b .fix-mood-change
 %patch13 -p1 -b .CVE-2025-49630
+%patch14 -p1 -b .CVE-2025-53020
 
 %build
 %configure
@@ -80,6 +83,10 @@ make check
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
+* Tue May 05 2026 Luboš Uhliarik <luhliari@redhat.com> - 1.15.7-10.5
+- Resolves: RHEL-166277 - httpd:2.4/httpd: Apache HTTP Server: HTTP/2 DoS by
+  Memory Increase (CVE-2025-53020)
+
 * Mon Jul 28 2025 Luboš Uhliarik <luhliari@redhat.com> - 1.15.7-10.4
 - Resolves: RHEL-105186 - httpd:2.4/httpd: untrusted input from a client causes
   an assertion to fail in the Apache mod_proxy_http2 module (CVE-2025-49630)
