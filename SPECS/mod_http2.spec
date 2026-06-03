@@ -3,7 +3,7 @@
 
 Name:		mod_http2
 Version:	2.0.26
-Release:	5%{?dist}
+Release:	6%{?dist}
 Summary:	module implementing HTTP/2 for Apache 2
 License:	ASL 2.0
 URL:		https://icing.github.io/mod_h2/
@@ -20,6 +20,8 @@ Patch100:      mod_http2-2.0.26-CVE-2024-27316.patch
 Patch101:      mod_http2-2.0.26-CVE-2024-36387.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=2374578
 Patch102:      mod_http2-2.0.26-CVE-2025-49630.patch
+# https://bugzilla.redhat.com/show_bug.cgi?id=2379343
+Patch103:      mod_http2-2.0.26-CVE-2025-53020.patch
 
 BuildRequires: make
 BuildRequires:  gcc
@@ -59,6 +61,10 @@ echo "LoadModule proxy_http2_module modules/mod_proxy_http2.so" > %{buildroot}%{
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
+* Tue May 05 2026 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-6
+- Resolves: RHEL-166293 - httpd: Apache HTTP Server: HTTP/2 DoS by Memory
+  Increase (CVE-2025-53020)
+
 * Wed Aug 20 2025 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-5
 - Resolves: RHEL-108706 - CVE-2025-49630 httpd: untrusted input from a client
   causes an assertion to fail in the Apache mod_proxy_http2 module
