@@ -3,7 +3,7 @@
 
 Name:		mod_http2
 Version:	2.0.29
-Release:	4%{?dist}
+Release:	4%{?dist}.1
 Summary:	module implementing HTTP/2 for Apache 2
 License:	Apache-2.0
 URL:		https://icing.github.io/mod_h2/
@@ -23,6 +23,8 @@ Conflicts:      libnghttp2 < 1.50.0-1
 Patch100:      mod_http2-2.0.29-CVE-2025-49630.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=2379343
 Patch101:      mod_http2-2.0.29-CVE-2025-53020.patch
+# https://redhat.atlassian.net/browse/RHEL-182418
+Patch102:      mod_http2-2.0.29-CVE-2026-49975.patch
 
 %description
 The mod_h2 Apache httpd module implements the HTTP2 protocol (h2+h2c) on
@@ -54,6 +56,10 @@ echo "LoadModule proxy_http2_module modules/mod_proxy_http2.so" > %{buildroot}%{
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
+* Fri Jun 05 2026 Luboš Uhliarik <luhliari@redhat.com> - 2.0.29-4.1
+- Resolves: RHEL-182410 - mod_http2: HTTP/2: Remote Denial of Service via
+  compression bomb and Slowloris-style attack (CVE-2026-49975)
+
 * Tue May 05 2026 Luboš Uhliarik <luhliari@redhat.com> - 2.0.29-4
 - Resolves: RHEL-166269 - httpd: Apache HTTP Server: HTTP/2 DoS by Memory
   Increase (CVE-2025-53020)
