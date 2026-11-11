@@ -3,7 +3,7 @@
 
 Name:		mod_http2
 Version:	2.0.26
-Release:	6%{?dist}.2
+Release:	7%{?dist}.1
 Summary:	module implementing HTTP/2 for Apache 2
 License:	ASL 2.0
 URL:		https://icing.github.io/mod_h2/
@@ -22,10 +22,17 @@ Patch101:      mod_http2-2.0.26-CVE-2024-36387.patch
 Patch102:      mod_http2-2.0.26-CVE-2025-49630.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=2379343
 Patch103:      mod_http2-2.0.26-CVE-2025-53020.patch
-# https://redhat.atlassian.net/browse/RHEL-182418
+# https://redhat.atlassian.net/browse/RHEL-182408
 Patch104:      mod_http2-2.0.26-CVE-2026-49975.patch
+# https://redhat.atlassian.net/browse/RHEL-191281
 Patch105:      mod_http2-2.0.26-CVE-2026-43951.patch
+# https://redhat.atlassian.net/browse/RHEL-191314
 Patch106:      mod_http2-2.0.26-CVE-2026-48913.patch
+# https://redhat.atlassian.net/browse/RHEL-279052
+# https://github.com/apache/httpd/commit/d072ed8f06d66a30072227d61a2fc04ad9ae5c99
+Patch107:      mod_http2-2.0.26-CVE-2026-57941.patch
+# https://redhat.atlassian.net/browse/RHEL-302035
+Patch108:      mod_http2-2.0.26-CVE-2026-119618.patch
 
 BuildRequires: make
 BuildRequires:  gcc
@@ -65,12 +72,21 @@ echo "LoadModule proxy_http2_module modules/mod_proxy_http2.so" > %{buildroot}%{
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
-* Tue Jun 30 2026 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-6.2
-- Resolves: RHEL-190583 - address CVE-2026-43951 and CVE-2026-48913 in mod_http2
+* Mon Nov 09 2026 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-7.1
+- Resolves: RHEL-279052 - mod_http2: Apache HTTP Server: mod_http2
+  use-after-free / wild write via shared session->bbtmp
+  re-entrancy (CVE-2026-57941)
+- Resolves: RHEL-302035 - mod_http2: httpd: Remote code execution
+  in mod_http2 (CVE-2026-119618)
 
-* Fri Jun 05 2026 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-6.1
-- Resolves: RHEL-182417 - mod_http2: HTTP/2: Remote Denial of Service via
+* Thu Sep 17 2026 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-7
+- Resolves: RHEL-182408 - mod_http2: HTTP/2: Remote Denial of Service via
   compression bomb and Slowloris-style attack (CVE-2026-49975)
+- Resolves: RHEL-191314 - mod_http2: Apache HTTP Server mod_http2: Use After
+  Free vulnerability allows arbitrary code execution or denial of service
+  (CVE-2026-48913)
+- Resolves: RHEL-191281 - mod_http2: Apache HTTP Server: Out-of-bounds Read
+  in mod_headers and mod_mime (CVE-2026-43951)
 
 * Tue May 05 2026 Luboš Uhliarik <luhliari@redhat.com> - 2.0.26-6
 - Resolves: RHEL-166293 - httpd: Apache HTTP Server: HTTP/2 DoS by Memory
