@@ -3,7 +3,7 @@
 
 Name:		mod_http2
 Version:	2.0.29
-Release:	4%{?dist}.2
+Release:	5%{?dist}.1
 Summary:	module implementing HTTP/2 for Apache 2
 License:	Apache-2.0
 URL:		https://icing.github.io/mod_h2/
@@ -23,10 +23,18 @@ Conflicts:      libnghttp2 < 1.50.0-1
 Patch100:      mod_http2-2.0.29-CVE-2025-49630.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=2379343
 Patch101:      mod_http2-2.0.29-CVE-2025-53020.patch
-# https://redhat.atlassian.net/browse/RHEL-182418
+# https://redhat.atlassian.net/browse/RHEL-182416
 Patch102:      mod_http2-2.0.29-CVE-2026-49975.patch
+# https://redhat.atlassian.net/browse/RHEL-191277
 Patch103:      mod_http2-2.0.29-CVE-2026-43951.patch
+# https://redhat.atlassian.net/browse/RHEL-191311
 Patch104:      mod_http2-2.0.29-CVE-2026-48913.patch
+# https://redhat.atlassian.net/browse/RHEL-279046
+# https://github.com/apache/httpd/commit/d072ed8f06d66a30072227d61a2fc04ad9ae5c99
+Patch105:      mod_http2-2.0.29-CVE-2026-57941.patch
+# https://redhat.atlassian.net/browse/RHEL-302345
+Patch106:      mod_http2-2.0.29-CVE-2026-119618.patch
+
 
 %description
 The mod_h2 Apache httpd module implements the HTTP2 protocol (h2+h2c) on
@@ -58,12 +66,21 @@ echo "LoadModule proxy_http2_module modules/mod_proxy_http2.so" > %{buildroot}%{
 %{_httpd_moddir}/mod_proxy_http2.so
 
 %changelog
-* Wed Jun 24 2026 Luboš Uhliarik <luhliari@redhat.com> - 2.0.29-4.2
-- Resolves: RHEL-188008 - address CVE-2026-43951, CVE-2026-48913
+* Mon Nov 09 2026 Luboš Uhliarik <luhliari@redhat.com> - 2.0.29-5.1
+- Resolves: RHEL-279046 - mod_http2: Apache HTTP Server: mod_http2
+  use-after-free / wild write via shared session->bbtmp
+  re-entrancy (CVE-2026-57941)
+- Resolves: RHEL-302345 - mod_http2: httpd: Remote code execution
+  in mod_http2 (CVE-2026-119618)
 
-* Fri Jun 05 2026 Luboš Uhliarik <luhliari@redhat.com> - 2.0.29-4.1
-- Resolves: RHEL-182410 - mod_http2: HTTP/2: Remote Denial of Service via
+* Thu Sep 17 2026 Luboš Uhliarik <luhliari@redhat.com> - 2.0.29-5
+- Resolves: RHEL-182416 - mod_http2: HTTP/2: Remote Denial of Service via
   compression bomb and Slowloris-style attack (CVE-2026-49975)
+- Resolves: RHEL-191311 - mod_http2: Apache HTTP Server mod_http2: Use After
+  Free vulnerability allows arbitrary code execution or denial of service
+  (CVE-2026-48913)
+- Resolves: RHEL-191277 - mod_http2: Apache HTTP Server: Out-of-bounds Read
+  in mod_headers and mod_mime (CVE-2026-43951)
 
 * Tue May 05 2026 Luboš Uhliarik <luhliari@redhat.com> - 2.0.29-4
 - Resolves: RHEL-166269 - httpd: Apache HTTP Server: HTTP/2 DoS by Memory
